@@ -1,7 +1,5 @@
 # Akko's Translator's Helper
 
----
-
 A command-line tool for Miliastra Wonderland localization that analyzes and optimizes
 translation CSV files exported from the game.
 
