@@ -1,3 +1,7 @@
 /.venv
 /.idea
 text.csv
+/__pycache__
+/src/translator_helper/__pycache__
+/build/
+/dist/
