@@ -1,12 +1,10 @@
 # Akko's Translator's Helper
 
----
-
 A command-line tool for Miliastra Wonderland localization that analyzes and optimizes
 translation CSV files exported from the game.
 
 Every non-default language translation in MW has a limit of 1000 symbols, where non-latin
-symbols count as 2, and while its fine for Chinese/Japanese, in languages like Russian and
+symbols count as 2, and while it's fine for Chinese/Japanese, in languages like Russian and
 Thai it very often causes import failures.
 
 This program finds and fixes three common sources of bloat - Cyrillic letter that could be
@@ -24,7 +22,7 @@ breaks - and can do the same on arbitrary text pasted from the clipboard.
     - strips quotation marks,
     - compresses each 2-hex channel to 1 hex - `#AABBCC` → `#ABC` - this would lead to slight
       color changes,
-    - drops alpha channel - `#ABCFF` → `#ABC` - only if its redundant (equal to F/255).
+    - drops alpha channel - `#ABCF` → `#ABC` - only if its redundant (equal to F/255).
 - **Whitespace cleanup** - removes spaces before every literal `\n`.
 - **Long-line report** - finds every cell whose "weight" exceeds 1000 and
   exports affected rows to a separate CSV for manual review.
@@ -40,49 +38,56 @@ Windows: [download](https://github.com/InvalidNickname/Translator_Helper/release
 
 Linux:
 
-1) Install Python, pip and venv:
+1) Install Python, pip, venv and xclip:
 
 **Debian / Ubuntu:**
 
-```bash
+````bash
 sudo apt update
-sudo apt install -y python3 python3-pip python3-venv
+sudo apt install -y python3 python3-pip python3-venv xclip
 ````
 
 **Fedora:**
 
-```bash
-sudo dnf install -y python3 python3-pip
+````bash
+sudo dnf install -y python3 python3-pip xclip
 ````
 
 **Arch Linux:**
 
-```bash
-sudo pacman -S python python-pip
+````bash
+sudo pacman -S python python-pip xclip
 ````
 
 2) Clone this repository
 
-```bash
+````bash
 git clone https://github.com/InvalidNickname/Translator_Helper.git
 cd Translator_Helper
-```
+````
 
 3) Create virtual environment
 
-```bash
+````bash
 python3 -m venv .venv
 source .venv/bin/activate
-```
+````
 
 4) Install dependencies
 
-```bash
+````bash
 pip install -r requirements.txt
-```
+````
 
 5) Run the program
 
-```bash
+````bash
 python3 main.py
-```
+````
+
+## Building the executable
+
+````bash
+pip install pyinstaller
+pyinstaller --onefile main.py
+````
