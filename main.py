@@ -1,7 +1,10 @@
+import argparse
+from pathlib import Path
+
 from menu import Menu, MenuItem
 from operations import (
     write_long_file, change_homoglyphs, trim_colors, delete_whitespaces, save, update_analysis_text, open_operations, confirm_exit, open_clipboard,
-    update_clipboard_analysis_text, get_clipboard_text, clipboard_save, do_everything
+    update_clipboard_analysis_text, get_clipboard_text, clipboard_save, do_everything, headless_everything
 )
 from state import AppState
 
@@ -37,7 +40,14 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    try:
-        main()
-    except KeyboardInterrupt:
-        print("\nInterrupted by user.")
+    parser = argparse.ArgumentParser(description="Compress/trim MW localization files.")
+    parser.add_argument("-f", "--file", type=str, help="path to .csv localization file")
+    args = parser.parse_args()
+    if args.file is None:
+        try:
+            main()
+        except KeyboardInterrupt:
+            print("\nInterrupted by user.")
+    else:
+        path = Path(args.file).expanduser()
+        headless_everything(path)

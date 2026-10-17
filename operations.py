@@ -25,6 +25,52 @@ HOMOGLYPHS = {
 TRANSLATION_TABLE = str.maketrans(HOMOGLYPHS)
 
 
+def read_file(path):
+    if not path.exists():
+        input("File not found. Check the path's correctness.")
+        return False, None
+    if not path.is_file():
+        if path.is_dir():
+            input("Path belongs to a directory, not a file.")
+        else:
+            input("Path doesn't belong to a file.")
+        return False, None
+
+    try:
+        df = pd.read_csv(path, dtype=str, encoding="utf-8-sig", keep_default_na=False)
+    except pd.errors.ParserError:
+        input("File parse error. Check for correctness if it was edited manually or re-export from the editor.")
+        return False, None
+    except pd.errors.EmptyDataError:
+        input("Empty file selected.")
+        return False, None
+    except UnicodeEncodeError:
+        input("File isn't UTF-8 encoded, data may be corrupted. Re-export from the editor again or change encoding to UTF-8.")
+        return False, None
+    except PermissionError:
+        input("Access to file prohibited. Check permissions or run with admin rights.")
+        return False, None
+    except OverflowError:
+        input("Some strings exceed 2 Gb limit. WTF did you write?")
+        return False, None
+    except MemoryError:
+        input("File doesn't fit into RAM. Close other applications and try again.")
+        return False, None
+
+    if df.shape[1] == 3:
+        input("File doesn't have translations except default. Nothing to change.")
+        return False, None
+    elif df.shape[1] < 3:
+        input("File has fewer than 3 columns, broken format.")
+        return False, None
+
+    if df.shape[0] == 0:
+        input("File is empty.")
+        return False, None
+
+    return True, df
+
+
 def choose_file(state: AppState) -> bool:
     """
     Prompts user to write a path to the file to analyze.
@@ -37,53 +83,12 @@ def choose_file(state: AppState) -> bool:
             input("Cancelled.")
             return False
 
-        path = Path(raw).expanduser()
+        file_path = Path(raw).expanduser()
+        status, state.df = read_file(file_path)
+        if status:
+            state.file_path = file_path
 
-        if not path.exists():
-            input("File not found. Check the path's correctness.")
-            return False
-        if not path.is_file():
-            if path.is_dir():
-                input("Path belongs to a directory, not a file.")
-            else:
-                input("Path doesn't belong to a file.")
-            return False
-
-        try:
-            state.df = pd.read_csv(path, dtype=str, encoding="utf-8-sig", keep_default_na=False)
-        except pd.errors.ParserError:
-            input("File parse error. Check for correctness if it was edited manually or re-export from the editor.")
-            return False
-        except pd.errors.EmptyDataError:
-            input("Empty file selected.")
-            return False
-        except UnicodeEncodeError:
-            input("File isn't UTF-8 encoded, data may be corrupted. Re-export from the editor again or change encoding to UTF-8.")
-            return False
-        except PermissionError:
-            input("Access to file prohibited. Check permissions or run with admin rights.")
-            return False
-        except OverflowError:
-            input("Some strings exceed 2 Gb limit. WTF did you write?")
-            return False
-        except MemoryError:
-            input("File doesn't fit into RAM. Close other applications and try again.")
-            return False
-
-        if state.df.shape[1] == 3:
-            input("File doesn't have translations except default. Nothing to change.")
-            return False
-        elif state.df.shape[1] < 3:
-            input("File has fewer than 3 columns, broken format.")
-            return False
-
-        if state.df.shape[0] == 0:
-            input("File is empty.")
-            return False
-
-        state.file_path = path
-
-        return True
+        return status
 
 
 def find_size(s: str) -> int:
@@ -227,10 +232,11 @@ def confirm_exit(state: AppState) -> bool:
     return ans == "y"
 
 
-def save(state: AppState) -> bool:
+def save(state: AppState, pause=True) -> bool:
     """
     Saves the edited dataframe.
     :param state: program state
+    :param pause: wait to any key after logging
     :return: operation success
     """
     # Define file name
@@ -239,7 +245,10 @@ def save(state: AppState) -> bool:
     # Save
     df = pd.concat([state.df_title, state.df_trimmed], axis=1)
     df.to_csv(path, encoding="utf-8-sig", index=False)
-    input(f"Saved to: {path.resolve()}")
+    if pause:
+        input(f"Saved to: {path.resolve()}")
+    else:
+        print(f"Saved to: {path.resolve()}")
     # Update dirty marker
     state.dirty = False
     return True
@@ -460,3 +469,29 @@ def do_everything(state: AppState) -> bool:
         return clipboard_save(state)
     else:
         return False
+
+
+def headless_everything(path: Path) -> None:
+    """
+    Do every .csv operation by file path
+    :param path: file name/path
+    """
+    state = AppState()
+    status, state.df = read_file(path)
+    if status:
+        state.file_path = path
+        analyze_text(state, False)
+        print(
+            f"File size: {state.size} lines, translated to {state.languages} languages\n"
+            f"Long (>1000 weight) entries: {state.long_lines}\n"
+            f"Can be optimized:\n"
+            f" Homoglyphs:\t\t{state.homoglyphs}\n"
+            f" Long color tags:\t{state.color_tags}\n"
+            f" Excess whitespaces:\t{state.whitespaces}"
+        )
+        change_homoglyphs(state, False, False)
+        trim_colors(state, False, False)
+        delete_whitespaces(state, False, False)
+        count_long_lines(state)
+        print(f"All optimizations completed, long entries remaining: {state.long_lines}")
+        save(state, False)

@@ -85,6 +85,14 @@ pip install -r requirements.txt
 python3 main.py
 ````
 
+## Headless usage
+
+You can launch the program to directly compress any selected file without any menus/input:
+
+````bash
+python main.py -f <FILE_PATH>
+````
+
 ## Building the executable
 
 ````bash
