@@ -11,6 +11,10 @@ This program finds and fixes three common sources of bloat - Cyrillic letter tha
 converted into Latin homoglyphs, overly long color tags, and stray whitespace before line
 breaks - and can do the same on arbitrary text pasted from the clipboard.
 
+<p align="center">
+  <img width="536" height="384" alt="Screenshot_6" src="https://github.com/user-attachments/assets/941ef46d-ca05-46f3-8226-e8d510ed11ed" />
+</p>
+
 ---
 
 ## Features
